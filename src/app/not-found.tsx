@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function NotFound() { return <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center"><div><p className="text-5xl font-semibold text-primary">404</p><h1 className="mt-4 text-xl font-semibold">Sayfa bulunamadı</h1><Link href="/dashboard" className="mt-5 inline-block text-sm text-primary hover:underline">Panele dön</Link></div></div>; }

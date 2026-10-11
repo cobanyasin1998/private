@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+:root { --background: #f7f8fa; --foreground: #17202d; --card: #ffffff; --card-foreground: #17202d; --primary: #3156c8; --primary-foreground: #ffffff; --muted: #eef1f5; --muted-foreground: #697586; --border: #e2e6ed; --sidebar: #fbfcfe; }
+.dark { --background: #11151d; --foreground: #e8ecf2; --card: #171d27; --card-foreground: #e8ecf2; --primary: #8da8ff; --primary-foreground: #101522; --muted: #202735; --muted-foreground: #9ba8ba; --border: #293344; --sidebar: #131923; }
+@theme inline { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground); --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-sidebar: var(--sidebar); }
+* { border-color: var(--border); }
+html { min-width: 320px; }
+body { background: var(--background); color: var(--foreground); }
+button, a { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }

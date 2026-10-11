@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lifeos
+      POSTGRES_PASSWORD: lifeos
+      POSTGRES_DB: lifeos
+    ports:
+      - "5433:5432"
+    volumes:
+      - lifeos-postgres:/var/lib/postgresql/data
+
+volumes:
+  lifeos-postgres:

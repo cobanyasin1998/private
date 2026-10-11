@@ -1,0 +1,888 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MovieStatus {
+  PLANNED
+  WATCHING
+  COMPLETED
+  DROPPED
+}
+
+enum ReadingStatus {
+  WANT_TO_READ
+  READING
+  COMPLETED
+  PAUSED
+  DROPPED
+}
+
+enum AccountType {
+  CASH
+  BANK
+  CREDIT_CARD
+  SAVINGS
+  OTHER
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum CourseStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  PAUSED
+  DROPPED
+}
+
+enum LearningAreaGroup {
+  TECHNOLOGY
+  ACADEMIC
+  PERSONAL_LIFE
+}
+
+enum LearningAreaLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LearningAreaStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  PAUSED
+}
+
+enum LearningItemType {
+  TOPIC
+  PRACTICE
+  LAB
+  MINI_PROJECT
+  QUIZ
+  READING
+  VIDEO
+  REVIEW
+}
+
+enum LearningTodoStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELED
+}
+
+enum LearningTodoPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TravelPlaceStatus {
+  WISHLIST
+  VISITED
+}
+
+enum TravelPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum EnglishSkill {
+  VOCABULARY
+  GRAMMAR
+  READING
+  LISTENING
+  SPEAKING
+  WRITING
+}
+
+enum EnglishEntryType {
+  VOCABULARY
+  GRAMMAR
+  READING
+  LISTENING
+  SPEAKING
+  WRITING
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELED
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+}
+
+enum SubscriptionInterval {
+  MONTHLY
+  YEARLY
+}
+
+model Owner {
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  passwordHash          String
+  displayName           String
+  timezone              String                 @default("Europe/Istanbul")
+  locale                String                 @default("tr")
+  currency              String                 @default("TRY")
+  weekStartsOn          Int                    @default(1)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  sessions              Session[]
+  settings              AppSetting[]
+  modulePrefs           ModulePreference[]
+  tags                  Tag[]
+  attachments           Attachment[]
+  movies                Movie[]
+  series                TVSeries[]
+  books                 Book[]
+  accounts              FinancialAccount[]
+  categories            FinancialCategory[]
+  transactions          FinancialTransaction[]
+  budgets               Budget[]
+  courses               Course[]
+  learningAreas         LearningArea[]
+  learningItems         LearningItem[]
+  learningTodos         LearningTodo[]
+  learningStudySessions LearningStudySession[]
+  travelPlaces          TravelPlace[]
+  englishSkillProgress  EnglishSkillProgress[]
+  englishEntries        LearningEnglishEntry[]
+  tasks                 Task[]
+  projects              Project[]
+  notes                 Note[]
+  habits                Habit[]
+  goals                 Goal[]
+  subscriptions         Subscription[]
+  activityEvents        ActivityEvent[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  ownerId   String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, expiresAt])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  ownerId   String
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, key])
+}
+
+model ModulePreference {
+  id        String   @id @default(cuid())
+  ownerId   String
+  moduleId  String
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  view      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, moduleId])
+}
+
+model Tag {
+  id            String            @id @default(cuid())
+  ownerId       String
+  name          String
+  color         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  owner         Owner             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  movies        MovieTag[]
+  books         BookTag[]
+  courses       CourseTag[]
+  learningAreas LearningAreaTag[]
+  learningItems LearningItemTag[]
+  travelPlaces  TravelPlaceTag[]
+  notes         NoteTag[]
+
+  @@unique([ownerId, name])
+  @@index([ownerId, name])
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  ownerId    String
+  storageKey String   @unique
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+  owner      Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+}
+
+model Movie {
+  id           String      @id @default(cuid())
+  ownerId      String
+  title        String
+  releaseYear  Int?
+  runtimeMins  Int?
+  posterUrl    String?
+  status       MovieStatus @default(PLANNED)
+  rating       Decimal?    @db.Decimal(3, 1)
+  review       String?
+  watchedAt    DateTime?
+  rewatchCount Int         @default(0)
+  favorite     Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  owner        Owner       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tags         MovieTag[]
+
+  @@index([ownerId, status, updatedAt])
+  @@index([ownerId, title])
+}
+
+model MovieTag {
+  movieId String
+  tagId   String
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, tagId])
+}
+
+model TVSeries {
+  id             String       @id @default(cuid())
+  ownerId        String
+  title          String
+  releaseYear    Int?
+  posterUrl      String?
+  status         MovieStatus  @default(PLANNED)
+  rating         Decimal?     @db.Decimal(3, 1)
+  currentEpisode Int          @default(0)
+  favorite       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  owner          Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  seasons        TVSeason[]
+  watchEntries   WatchEntry[]
+
+  @@index([ownerId, status, updatedAt])
+}
+
+model TVSeason {
+  id        String      @id @default(cuid())
+  seriesId  String
+  number    Int
+  title     String?
+  createdAt DateTime    @default(now())
+  series    TVSeries    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  episodes  TVEpisode[]
+
+  @@unique([seriesId, number])
+}
+
+model TVEpisode {
+  id        String    @id @default(cuid())
+  seasonId  String
+  number    Int
+  title     String
+  watchedAt DateTime?
+  createdAt DateTime  @default(now())
+  season    TVSeason  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, number])
+}
+
+model WatchEntry {
+  id        String   @id @default(cuid())
+  seriesId  String
+  watchedAt DateTime @default(now())
+  note      String?
+  series    TVSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([seriesId, watchedAt])
+}
+
+model Book {
+  id              String           @id @default(cuid())
+  ownerId         String
+  title           String
+  author          String?
+  isbn            String?
+  coverUrl        String?
+  pageCount       Int?
+  currentPage     Int              @default(0)
+  genre           String?
+  description     String?
+  publisher       String?
+  publicationYear Int?
+  rating          Decimal?         @db.Decimal(3, 1)
+  review          String?
+  status          ReadingStatus    @default(WANT_TO_READ)
+  favorite        Boolean          @default(false)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  owner           Owner            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  sessions        ReadingSession[]
+  tags            BookTag[]
+
+  @@index([ownerId, status, updatedAt])
+  @@index([ownerId, title])
+}
+
+model BookTag {
+  bookId String
+  tagId  String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, tagId])
+}
+
+model ReadingSession {
+  id        String    @id @default(cuid())
+  bookId    String
+  startedAt DateTime
+  endedAt   DateTime?
+  pagesRead Int       @default(0)
+  note      String?
+  book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, startedAt])
+}
+
+model FinancialAccount {
+  id             String                 @id @default(cuid())
+  ownerId        String
+  name           String
+  type           AccountType
+  currency       String                 @default("TRY")
+  openingBalance Decimal                @default(0) @db.Decimal(19, 4)
+  archived       Boolean                @default(false)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  owner          Owner                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  transactions   FinancialTransaction[]
+
+  @@index([ownerId, archived])
+}
+
+model FinancialCategory {
+  id           String                 @id @default(cuid())
+  ownerId      String
+  name         String
+  kind         TransactionType
+  color        String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  owner        Owner                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  transactions FinancialTransaction[]
+  budgets      BudgetAllocation[]
+
+  @@unique([ownerId, name, kind])
+}
+
+model FinancialTransaction {
+  id            String             @id @default(cuid())
+  ownerId       String
+  accountId     String
+  categoryId    String?
+  type          TransactionType
+  amount        Decimal            @db.Decimal(19, 4)
+  currency      String
+  occurredAt    DateTime
+  description   String
+  transferGroup String?
+  recurring     Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  owner         Owner              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  account       FinancialAccount   @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  category      FinancialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, occurredAt])
+  @@index([accountId, occurredAt])
+  @@index([ownerId, type, occurredAt])
+}
+
+model Budget {
+  id          String             @id @default(cuid())
+  ownerId     String
+  month       DateTime           @db.Date
+  name        String
+  currency    String             @default("TRY")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  owner       Owner              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  allocations BudgetAllocation[]
+
+  @@unique([ownerId, month])
+}
+
+model BudgetAllocation {
+  id         String            @id @default(cuid())
+  budgetId   String
+  categoryId String
+  amount     Decimal           @db.Decimal(19, 4)
+  budget     Budget            @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category   FinancialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, categoryId])
+}
+
+model Course {
+  id            String         @id @default(cuid())
+  ownerId       String
+  name          String
+  category      String?
+  description   String?
+  provider      String?
+  externalUrl   String?
+  status        CourseStatus   @default(PLANNED)
+  progress      Int            @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  owner         Owner          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  lessons       CourseLesson[]
+  sessions      StudySession[]
+  tags          CourseTag[]
+  learningNotes Note[]         @relation("CourseLearningNotes")
+  learningGoals Goal[]         @relation("CourseLearningGoals")
+
+  @@index([ownerId, status, updatedAt])
+  @@index([ownerId, name])
+}
+
+model CourseTag {
+  courseId String
+  tagId    String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, tagId])
+}
+
+model CourseLesson {
+  id            String    @id @default(cuid())
+  courseId      String
+  title         String
+  position      Int
+  completedAt   DateTime?
+  notes         String?
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  learningNotes Note[]    @relation("LessonLearningNotes")
+
+  @@unique([courseId, position])
+}
+
+model StudySession {
+  id        String    @id @default(cuid())
+  courseId  String
+  startedAt DateTime
+  endedAt   DateTime?
+  minutes   Int       @default(0)
+  note      String?
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId, startedAt])
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  ownerId     String
+  name        String
+  description String?
+  status      ProjectStatus @default(PLANNED)
+  dueDate     DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  owner       Owner         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([ownerId, status])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  ownerId     String
+  projectId   String?
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  owner       Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, status, dueDate])
+}
+
+model Note {
+  id             String        @id @default(cuid())
+  ownerId        String
+  courseId       String?
+  lessonId       String?
+  learningAreaId String?
+  learningItemId String?
+  title          String
+  content        String
+  category       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  owner          Owner         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  course         Course?       @relation("CourseLearningNotes", fields: [courseId], references: [id], onDelete: SetNull)
+  lesson         CourseLesson? @relation("LessonLearningNotes", fields: [lessonId], references: [id], onDelete: SetNull)
+  learningArea   LearningArea? @relation("LearningAreaNotes", fields: [learningAreaId], references: [id], onDelete: SetNull)
+  learningItem   LearningItem? @relation("LearningItemNotes", fields: [learningItemId], references: [id], onDelete: SetNull)
+  tags           NoteTag[]
+
+  @@index([ownerId, updatedAt])
+  @@index([ownerId, courseId])
+  @@index([ownerId, lessonId])
+  @@index([ownerId, learningAreaId])
+  @@index([ownerId, learningItemId])
+}
+
+model NoteTag {
+  noteId String
+  tagId  String
+  note   Note   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+}
+
+model Habit {
+  id          String         @id @default(cuid())
+  ownerId     String
+  name        String
+  frequency   HabitFrequency @default(DAILY)
+  targetCount Int            @default(1)
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  owner       Owner          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  entries     HabitEntry[]
+
+  @@index([ownerId, active])
+}
+
+model HabitEntry {
+  id        String   @id @default(cuid())
+  habitId   String
+  date      DateTime @db.Date
+  completed Boolean  @default(false)
+  note      String?
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+}
+
+model Goal {
+  id             String          @id @default(cuid())
+  ownerId        String
+  courseId       String?
+  learningAreaId String?
+  learningItemId String?
+  title          String
+  description    String?
+  targetValue    Decimal?        @db.Decimal(19, 4)
+  currentValue   Decimal?        @db.Decimal(19, 4)
+  dueDate        DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  owner          Owner           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  course         Course?         @relation("CourseLearningGoals", fields: [courseId], references: [id], onDelete: SetNull)
+  learningArea   LearningArea?   @relation("LearningAreaGoals", fields: [learningAreaId], references: [id], onDelete: SetNull)
+  learningItem   LearningItem?   @relation("LearningItemGoals", fields: [learningItemId], references: [id], onDelete: SetNull)
+  milestones     GoalMilestone[]
+
+  @@index([ownerId, dueDate])
+  @@index([ownerId, courseId])
+  @@index([ownerId, learningAreaId])
+  @@index([ownerId, learningItemId])
+}
+
+model GoalMilestone {
+  id          String    @id @default(cuid())
+  goalId      String
+  title       String
+  position    Int
+  completedAt DateTime?
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@unique([goalId, position])
+}
+
+model Subscription {
+  id            String               @id @default(cuid())
+  ownerId       String
+  name          String
+  category      String?
+  amount        Decimal              @db.Decimal(19, 4)
+  currency      String               @default("TRY")
+  interval      SubscriptionInterval
+  nextRenewalAt DateTime
+  active        Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  owner         Owner                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, active, nextRenewalAt])
+}
+
+model ActivityEvent {
+  id         String   @id @default(cuid())
+  ownerId    String
+  type       String
+  title      String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  owner      Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, createdAt])
+}
+
+/// A reusable learning track. Courses remain available for backwards
+/// compatibility; this model is the extensible home for all learning areas.
+model LearningArea {
+  id               String                 @id @default(cuid())
+  ownerId          String
+  slug             String
+  name             String
+  description      String?
+  group            LearningAreaGroup
+  category         String?
+  subCategory      String?
+  level            LearningAreaLevel      @default(BEGINNER)
+  status           LearningAreaStatus     @default(PLANNED)
+  progress         Int                    @default(0)
+  estimatedMinutes Int?
+  prerequisites    String?
+  notes            String?
+  resourceUrls     String[]               @default([])
+  lastWorkedAt     DateTime?
+  completedAt      DateTime?
+  englishLevel     String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  owner            Owner                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items            LearningItem[]
+  todos            LearningTodo[]
+  sessions         LearningStudySession[]
+  tags             LearningAreaTag[]
+  learningNotes    Note[]                 @relation("LearningAreaNotes")
+  learningGoals    Goal[]                 @relation("LearningAreaGoals")
+  englishSkills    EnglishSkillProgress[]
+  englishEntries   LearningEnglishEntry[]
+
+  @@unique([ownerId, slug])
+  @@index([ownerId, group, status, updatedAt])
+  @@index([ownerId, name])
+}
+
+model LearningItem {
+  id               String            @id @default(cuid())
+  ownerId          String
+  areaId           String
+  parentId         String?
+  title            String
+  description      String?
+  summary          String?
+  content          String?
+  requirements     String?
+  goals            String?
+  type             LearningItemType  @default(TOPIC)
+  position         Int               @default(0)
+  estimatedMinutes Int?
+  notes            String?
+  externalUrl      String?
+  completedAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  owner            Owner             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  area             LearningArea      @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  parent           LearningItem?     @relation("LearningItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children         LearningItem[]    @relation("LearningItemHierarchy")
+  tags             LearningItemTag[]
+  todos            LearningTodo[]
+  learningNotes    Note[]            @relation("LearningItemNotes")
+  learningGoals    Goal[]            @relation("LearningItemGoals")
+
+  @@index([ownerId, areaId, position])
+  @@index([ownerId, areaId, parentId, position])
+  @@index([ownerId, completedAt])
+}
+
+/// A concrete, actionable checklist entry belonging to a learning area or item.
+/// Generic Task records remain available for project work; these todos keep
+/// learning plans owner-scoped and close to their topic/lab hierarchy.
+model LearningTodo {
+  id          String               @id @default(cuid())
+  ownerId     String
+  areaId      String
+  itemId      String?
+  title       String
+  description String?
+  status      LearningTodoStatus   @default(TODO)
+  priority    LearningTodoPriority @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  owner       Owner                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  area        LearningArea         @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  item        LearningItem?        @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, areaId, status, dueDate])
+  @@index([ownerId, itemId])
+}
+
+model LearningAreaTag {
+  areaId String
+  tagId  String
+  area   LearningArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  tag    Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([areaId, tagId])
+}
+
+model LearningItemTag {
+  itemId String
+  tagId  String
+  item   LearningItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tag    Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, tagId])
+}
+
+model LearningStudySession {
+  id        String       @id @default(cuid())
+  ownerId   String
+  areaId    String
+  startedAt DateTime
+  endedAt   DateTime?
+  minutes   Int          @default(0)
+  note      String?
+  owner     Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  area      LearningArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, areaId, startedAt])
+}
+
+model TravelPlace {
+  id              String            @id @default(cuid())
+  ownerId         String
+  placeName       String
+  city            String?
+  country         String?
+  status          TravelPlaceStatus @default(WISHLIST)
+  priority        TravelPriority    @default(MEDIUM)
+  estimatedBudget Decimal?          @db.Decimal(19, 4)
+  currency        String            @default("TRY")
+  notes           String?
+  photoUrl        String?
+  externalUrl     String?
+  visitedAt       DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  owner           Owner             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tags            TravelPlaceTag[]
+
+  @@index([ownerId, status, priority])
+  @@index([ownerId, placeName])
+}
+
+model TravelPlaceTag {
+  placeId String
+  tagId   String
+  place   TravelPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  tag     Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([placeId, tagId])
+}
+
+model EnglishSkillProgress {
+  id         String       @id @default(cuid())
+  ownerId    String
+  areaId     String
+  skill      EnglishSkill
+  level      String?
+  progress   Int          @default(0)
+  assessedAt DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  owner      Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  area       LearningArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, areaId, skill])
+  @@index([ownerId, areaId])
+}
+
+model LearningEnglishEntry {
+  id          String           @id @default(cuid())
+  ownerId     String
+  areaId      String
+  type        EnglishEntryType
+  title       String
+  content     String?
+  notes       String?
+  progress    Int              @default(0)
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  owner       Owner            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  area        LearningArea     @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, areaId, type])
+  @@index([ownerId, completedAt])
+}
